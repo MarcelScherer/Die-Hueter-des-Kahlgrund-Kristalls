@@ -1,15 +1,10 @@
 package com.example.diehterdeskahlgrundkristalls
 
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.diehterdeskahlgrundkristalls.databinding.ActivityImpresumBinding
 
-class impresum : AppCompatActivity() {
+class ImpresumActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityImpresumBinding
 
