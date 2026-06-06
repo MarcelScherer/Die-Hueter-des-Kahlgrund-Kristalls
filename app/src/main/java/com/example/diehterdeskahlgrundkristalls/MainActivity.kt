@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 class MainActivity : AppCompatActivity() {
 
     private lateinit var scrollView: ScrollView
+    private lateinit var headerImage: ImageView
     private lateinit var storyTextView: TextView
     private val scrollHandler = Handler(Looper.getMainLooper())
     private lateinit var scrollRunnable: Runnable
@@ -28,23 +29,18 @@ class MainActivity : AppCompatActivity() {
     private var isAnimating = false
     private var canStartMusic = false
 
+    private val PREFS_NAME = "KahlgrundSpielstand"
+    private val KEY_KAPITEL = "aktuelles_kapitel"
+    private var gespeichertesKapitel : Int = 0
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // MP3 initialisieren
-        mediaPlayer = MediaPlayer.create(this, R.raw.mp3_1)
-        mediaPlayer?.isLooping = false
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        gespeichertesKapitel = prefs.getInt(KEY_KAPITEL, 0)
 
-        // Musik und Animation verzögert nach 3 Sekunden starten
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (!isFinishing) {
-                canStartMusic = true // Jetzt ist die Erlaubnis da
-                mediaPlayer?.start()
-                startTalkingAnimation()
-            }
-        }, 3000)
 
         // 1. Impressum Button
         val btnImpressum = findViewById<ImageButton>(R.id.btnImpressum)
@@ -60,47 +56,66 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        if (gespeichertesKapitel == 2) {
+            val intent = Intent(this, QuizActivity::class.java)
+            startActivity(intent)
+        }
+
+
         // 3. Views initialisieren
         scrollView = findViewById(R.id.textScrollView)
         storyTextView = findViewById(R.id.storyTextView)
+        headerImage = findViewById<ImageView>(R.id.headerImage)
         val btnRepeat = findViewById<Button>(R.id.btnRepeat)
         val btnNext = findViewById<Button>(R.id.btnNext)
 
         // 4. Text setzen und Auto-Scroll starten
-        storyTextView.text = getString(R.string.story_intro)
-        startAutoScroll()
+        setEnvironment()
 
         btnRepeat.setOnClickListener {
             scrollView.smoothScrollTo(0, 0)
-            startAutoScroll()
+            setEnvironment()
         }
 
-        btnRepeat.setOnClickListener {
-            // 1. Scroll-Position sofort auf Anfang setzen
-            scrollView.scrollTo(0, 0)
+        btnNext.setOnClickListener {
+            if(gespeichertesKapitel == 0 || gespeichertesKapitel == 1){
+                gespeichertesKapitel++
+            }
+            saveProgress(gespeichertesKapitel)
+            mediaPlayer?.stop()
 
-            // 2. Auto-Scroll neu starten (mit der üblichen Verzögerung)
-            startAutoScroll()
-
-            // 3. Musik von vorne starten
-            mediaPlayer?.let { player ->
-                player.pause()           // Erst stoppen
-                player.seekTo(0)         // An den Anfang springen
-
-                // Wir nutzen einen kleinen Handler, damit der Neustart der Musik
-                // mit der Animation synchronisiert wird
-                canStartMusic = true
-                Handler(Looper.getMainLooper()).postDelayed({
-                    if (!isFinishing) {
-                        canStartMusic = true // Jetzt ist die Erlaubnis da
-                        mediaPlayer?.start()
-                        startTalkingAnimation()
-                    }
-                }, 3000)
+            if(gespeichertesKapitel == 0 || gespeichertesKapitel == 1){
+                setEnvironment()
+            }
+            else if (gespeichertesKapitel == 2) {
+                val intent = Intent(this, QuizActivity::class.java)
+                startActivity(intent)
             }
         }
     }
 
+    private fun setEnvironment(){
+        val (bildIdle, bildMund1, bildMund2) = getAnimationFrames(gespeichertesKapitel)
+        headerImage.setImageResource(bildIdle)
+        updateUIForChapter()
+        startAudioLogic()
+        startAutoScroll()
+    }
+
+    private fun updateUIForChapter() {
+        // Text zurücksetzen
+        scrollView.scrollTo(0, 0)
+
+        // Text basierend auf Kapitel setzen
+        storyTextView.text = when (gespeichertesKapitel) {
+            0 -> getString(R.string.story_intro)
+            1 -> getString(R.string.kapitel_1_frage)
+            else -> getString(R.string.story_intro)
+        }
+
+        // Auto-Scroll neu starten
+        startAutoScroll()
+    }
 
     private fun startAutoScroll() {
         scrollHandler.removeCallbacksAndMessages(null)
@@ -116,26 +131,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun startTalkingAnimation() {
         isAnimating = true
-        val headerImage = findViewById<ImageView>(R.id.headerImage)
+
+        // Hol dir die richtigen Bilder für das aktuelle Kapitel
+        val (bildIdle, bildMund1, bildMund2) = getAnimationFrames(gespeichertesKapitel)
 
         val animationRunnable = object : Runnable {
             override fun run() {
                 // Stoppen, wenn Musik aus oder isAnimating false
                 if (!isAnimating || mediaPlayer == null || !mediaPlayer!!.isPlaying) {
-                    headerImage.setImageResource(R.drawable.start_bild_1)
+                    headerImage.setImageResource(bildIdle) // Nutzt bildIdle (Bild 1)
                     return
                 }
 
                 // Wechsel zwischen Bild 2 und 3 (Mund auf/zu)
                 if (currentFrame == 2) {
-                    headerImage.setImageResource(R.drawable.start_bild_2)
+                    headerImage.setImageResource(bildMund1) // Nutzt bildMund1
                     currentFrame = 3
                 } else {
-                    headerImage.setImageResource(R.drawable.start_bild_3)
+                    headerImage.setImageResource(bildMund2) // Nutzt bildMund2
                     currentFrame = 2
                 }
 
-                // Wiederholen alle 200ms
+                // Wiederholen alle 300ms
                 animationHandler.postDelayed(this, 300)
             }
         }
@@ -146,6 +163,7 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         mediaPlayer?.pause()
         isAnimating = false
+        saveProgress(gespeichertesKapitel)
     }
 
     override fun onResume() {
@@ -165,4 +183,50 @@ class MainActivity : AppCompatActivity() {
         mediaPlayer = null
         isAnimating = false
     }
+
+    private fun saveProgress(kapitel: Int) {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val editor = prefs.edit()
+        editor.putInt(KEY_KAPITEL, kapitel)
+        editor.apply() // Speichert im Hintergrund
+    }
+
+    private fun getAnimationFrames(kapitel: Int): Triple<Int, Int, Int> {
+        return when (kapitel) {
+            0 -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
+            1 -> Triple(R.drawable.kapitel_1_bild_1, R.drawable.kapitel_1_bild_2, R.drawable.kapitel_1_bild_3)
+            // Standardfall: Falls Kapitelnummer unbekannt, nimm die Startbilder
+            else -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
+        }
+    }
+
+    private fun getStoryAudio(kapitel: Int): Int {
+        return when (kapitel) {
+            0 -> R.raw.mp3_1
+            1 -> R.raw.mp3_kapitle_1
+            // Weitere Kapitel hier ergänzen
+            else -> R.raw.mp3_1
+        }
+    }
+    private fun startAudioLogic() {
+        // Falls schon Musik spielt, stoppen und freigeben
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+
+        // 1. Die richtige MP3 für das Kapitel laden
+        val audioRes = getStoryAudio(gespeichertesKapitel)
+        mediaPlayer = MediaPlayer.create(this, audioRes)
+        mediaPlayer?.isLooping = false
+
+        // 2. Verzögerung starten
+        canStartMusic = false // Zurücksetzen, bis die Verzögerung vorbei ist
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (!isFinishing) {
+                canStartMusic = true // Erlaubnis zum Abspielen erteilt
+                mediaPlayer?.start()
+                startTalkingAnimation()
+            }
+        }, 3000) // 3 Sekunden Verzögerung
+    }
+
 }
