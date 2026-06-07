@@ -14,7 +14,7 @@ class QuizActivity : AppCompatActivity() {
 
     private val PREFS_NAME = "KahlgrundSpielstand"
     private val KEY_KAPITEL = "aktuelles_kapitel"
-    private var gespeichertesKapitel : Int = 0
+    private var spiellstandActuell : Spielstand = Spielstand.INTRO
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +29,7 @@ class QuizActivity : AppCompatActivity() {
         }
 
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        gespeichertesKapitel = prefs.getInt(KEY_KAPITEL, 0)
+        spiellstandActuell = Spielstand.ausInt(prefs.getInt(KEY_KAPITEL, 0))
 
         val questionText = findViewById<TextView>(R.id.questionTextView)
         val btn1 = findViewById<Button>(R.id.btnAnswer1)
@@ -38,7 +38,7 @@ class QuizActivity : AppCompatActivity() {
         val btn4 = findViewById<Button>(R.id.btnAnswer4)
         val quizImage = findViewById<ImageView>(R.id.quizImage)
 
-        if(gespeichertesKapitel == 2){
+        if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA){
             quizImage.setImageResource(R.drawable.raetsel_1)
             questionText.text = "Was steht auf einer der Türen"
             btn1.text = "Gott schütze dich"
@@ -48,10 +48,32 @@ class QuizActivity : AppCompatActivity() {
         }
 
         // Klick-Logik
-        btn1.setOnClickListener { handleAnswer(false) }
-        btn2.setOnClickListener { handleAnswer(true) } // Beispiel: Blau ist richtig
-        btn3.setOnClickListener { handleAnswer(false) }
-        btn4.setOnClickListener { handleAnswer(false) }
+        btn1.setOnClickListener {
+            if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
+                handleAnswer(false)
+            }
+        }
+        btn2.setOnClickListener {
+            if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
+                handleAnswer(true)
+                saveProgress(spiellstandActuell.wert + 1)
+                val intent = android.content.Intent(this, MainActivity::class.java)
+                // Flags sorgen dafür, dass die MainActivity sauber neu startet
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
+            }
+        }
+        btn3.setOnClickListener {
+            if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
+                handleAnswer(false)
+            }
+        }
+        btn4.setOnClickListener {
+            if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
+                handleAnswer(false)
+            }
+        }
     }
 
     private fun handleAnswer(isCorrect: Boolean) {
@@ -61,5 +83,10 @@ class QuizActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "Leider falsch, versuch es nochmal!", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun saveProgress(kapitelWert: Int) {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putInt(KEY_KAPITEL, kapitelWert).apply()
     }
 }

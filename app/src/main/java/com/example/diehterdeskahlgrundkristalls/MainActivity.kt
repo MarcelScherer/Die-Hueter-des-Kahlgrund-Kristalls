@@ -5,12 +5,12 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView // WICHTIG: Der richtige Import!
 import android.widget.ScrollView
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
     private val PREFS_NAME = "KahlgrundSpielstand"
     private val KEY_KAPITEL = "aktuelles_kapitel"
-    private var gespeichertesKapitel : Int = 0
+    private var spiellstandActuell : Spielstand = Spielstand.INTRO
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        gespeichertesKapitel = prefs.getInt(KEY_KAPITEL, 0)
+        spiellstandActuell = Spielstand.ausInt(prefs.getInt(KEY_KAPITEL, 0))
 
 
         // 1. Impressum Button
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        if (gespeichertesKapitel == 2) {
+        if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
             val intent = Intent(this, QuizActivity::class.java)
             startActivity(intent)
         }
@@ -78,16 +78,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnNext.setOnClickListener {
-            if(gespeichertesKapitel == 0 || gespeichertesKapitel == 1){
-                gespeichertesKapitel++
+            Log.d("DEBUG_KAPITEL", "Klick Weiter. Stand vor Änderung: $spiellstandActuell")
+            if(spiellstandActuell == Spielstand.INTRO || spiellstandActuell == Spielstand.START_ST_KATARINA){
+                spiellstandActuell = Spielstand.ausInt(spiellstandActuell.wert + 1)
             }
-            saveProgress(gespeichertesKapitel)
+            saveProgress(spiellstandActuell.wert)
             mediaPlayer?.stop()
 
-            if(gespeichertesKapitel == 0 || gespeichertesKapitel == 1){
+            if(spiellstandActuell == Spielstand.INTRO || spiellstandActuell == Spielstand.START_ST_KATARINA){
                 setEnvironment()
             }
-            else if (gespeichertesKapitel == 2) {
+            else if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
                 val intent = Intent(this, QuizActivity::class.java)
                 startActivity(intent)
             }
@@ -95,7 +96,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setEnvironment(){
-        val (bildIdle, bildMund1, bildMund2) = getAnimationFrames(gespeichertesKapitel)
+        val (bildIdle, bildMund1, bildMund2) = getAnimationFrames(spiellstandActuell)
         headerImage.setImageResource(bildIdle)
         updateUIForChapter()
         startAudioLogic()
@@ -107,9 +108,10 @@ class MainActivity : AppCompatActivity() {
         scrollView.scrollTo(0, 0)
 
         // Text basierend auf Kapitel setzen
-        storyTextView.text = when (gespeichertesKapitel) {
-            0 -> getString(R.string.story_intro)
-            1 -> getString(R.string.kapitel_1_frage)
+        storyTextView.text = when (spiellstandActuell) {
+            Spielstand.INTRO                -> getString(R.string.story_intro)
+            Spielstand.START_ST_KATARINA    -> getString(R.string.kapitel_1_frage)
+            Spielstand.ERGEBNIS_ST_KATARINA -> getString(R.string.kapitle_1_antwort)
             else -> getString(R.string.story_intro)
         }
 
@@ -133,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         isAnimating = true
 
         // Hol dir die richtigen Bilder für das aktuelle Kapitel
-        val (bildIdle, bildMund1, bildMund2) = getAnimationFrames(gespeichertesKapitel)
+        val (bildIdle, bildMund1, bildMund2) = getAnimationFrames(spiellstandActuell)
 
         val animationRunnable = object : Runnable {
             override fun run() {
@@ -153,7 +155,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 // Wiederholen alle 300ms
-                animationHandler.postDelayed(this, 300)
+                animationHandler.postDelayed(this, 200)
             }
         }
         animationHandler.post(animationRunnable)
@@ -163,7 +165,7 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         mediaPlayer?.pause()
         isAnimating = false
-        saveProgress(gespeichertesKapitel)
+        saveProgress(spiellstandActuell.wert)
     }
 
     override fun onResume() {
@@ -191,19 +193,21 @@ class MainActivity : AppCompatActivity() {
         editor.apply() // Speichert im Hintergrund
     }
 
-    private fun getAnimationFrames(kapitel: Int): Triple<Int, Int, Int> {
+    private fun getAnimationFrames(kapitel: Spielstand): Triple<Int, Int, Int> {
         return when (kapitel) {
-            0 -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
-            1 -> Triple(R.drawable.kapitel_1_bild_1, R.drawable.kapitel_1_bild_2, R.drawable.kapitel_1_bild_3)
+            Spielstand.INTRO                -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
+            Spielstand.START_ST_KATARINA    ->  Triple(R.drawable.kapitel_1_bild_1, R.drawable.kapitel_1_bild_2, R.drawable.kapitel_1_bild_3)
+            Spielstand.ERGEBNIS_ST_KATARINA ->  Triple(R.drawable.kapitel_1_bild_4, R.drawable.kapitel_1_bild_5, R.drawable.kapitel_1_bild_6)
             // Standardfall: Falls Kapitelnummer unbekannt, nimm die Startbilder
             else -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
         }
     }
 
-    private fun getStoryAudio(kapitel: Int): Int {
+    private fun getStoryAudio(kapitel: Spielstand): Int {
         return when (kapitel) {
-            0 -> R.raw.mp3_1
-            1 -> R.raw.mp3_kapitle_1
+            Spielstand.INTRO                -> R.raw.mp3_1
+            Spielstand.START_ST_KATARINA    -> R.raw.mp3_kapitel_1_frage
+            Spielstand.ERGEBNIS_ST_KATARINA -> R.raw.mp3_kapitel_1_ergebnis
             // Weitere Kapitel hier ergänzen
             else -> R.raw.mp3_1
         }
@@ -214,19 +218,24 @@ class MainActivity : AppCompatActivity() {
         mediaPlayer?.release()
 
         // 1. Die richtige MP3 für das Kapitel laden
-        val audioRes = getStoryAudio(gespeichertesKapitel)
+        val audioRes = getStoryAudio(spiellstandActuell)
         mediaPlayer = MediaPlayer.create(this, audioRes)
         mediaPlayer?.isLooping = false
 
-        // 2. Verzögerung starten
-        canStartMusic = false // Zurücksetzen, bis die Verzögerung vorbei ist
+        // 2. Verzögerung für Musik (3 Sekunden)
+        canStartMusic = false
         Handler(Looper.getMainLooper()).postDelayed({
             if (!isFinishing) {
-                canStartMusic = true // Erlaubnis zum Abspielen erteilt
+                canStartMusic = true
                 mediaPlayer?.start()
-                startTalkingAnimation()
-            }
-        }, 3000) // 3 Sekunden Verzögerung
-    }
 
+                // 3. NEU: Verzögerung für Animation (Zusätzlich 1 Sekunde warten)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (!isFinishing && mediaPlayer != null && mediaPlayer!!.isPlaying) {
+                        startTalkingAnimation()
+                    }
+                }, 1000) // 1000ms = 1 Sekunde nach Musikstart
+            }
+        }, 3000) // Musikstart nach 3 Sekunden
+    }
 }
