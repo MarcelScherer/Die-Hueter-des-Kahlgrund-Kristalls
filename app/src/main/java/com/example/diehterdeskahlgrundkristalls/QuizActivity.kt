@@ -40,17 +40,33 @@ class QuizActivity : AppCompatActivity() {
 
         if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA){
             quizImage.setImageResource(R.drawable.raetsel_1)
-            questionText.text = "Was steht auf einer der Türen"
+            questionText.text = "Was steht auf einer der Türen?"
             btn1.text = "Gott schütze dich"
             btn2.text = "Sankt Katharina"
             btn3.text = "Erwecke deine Kirche und fang bei mir an"
-            btn4.text = "Sei mit uns"
+        }
+        else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS){
+            quizImage.setImageResource(R.drawable.raetsel_2)
+            questionText.text = "Wann wurde der erste Bauteil des Sackhauses erbaut?"
+            btn1.text = "1473"
+            btn2.text = "1572"
+            btn3.text = "1682"
+            btn4.text = "1996"
         }
 
         // Klick-Logik
         btn1.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
                 handleAnswer(false)
+            }
+            else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
+                handleAnswer(true)
+                saveProgress(spiellstandActuell.wert + 1)
+                val intent = android.content.Intent(this, MainActivity::class.java)
+                // Flags sorgen dafür, dass die MainActivity sauber neu startet
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
             }
         }
         btn2.setOnClickListener {
@@ -63,14 +79,23 @@ class QuizActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish()
             }
+            else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
+                handleAnswer(false)
+            }
         }
         btn3.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
                 handleAnswer(false)
             }
+            else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
+                handleAnswer(false)
+            }
         }
         btn4.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
+                handleAnswer(false)
+            }
+            else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
                 handleAnswer(false)
             }
         }

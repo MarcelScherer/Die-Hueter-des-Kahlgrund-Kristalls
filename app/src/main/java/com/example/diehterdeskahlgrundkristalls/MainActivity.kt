@@ -56,7 +56,9 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
+        Log.d("Die Hüter des Kahlgrund Kristalls", "aktueller Spielstand: $spiellstandActuell")
+        if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA ||
+            spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
             val intent = Intent(this, QuizActivity::class.java)
             startActivity(intent)
         }
@@ -78,17 +80,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnNext.setOnClickListener {
-            Log.d("DEBUG_KAPITEL", "Klick Weiter. Stand vor Änderung: $spiellstandActuell")
-            if(spiellstandActuell == Spielstand.INTRO || spiellstandActuell == Spielstand.START_ST_KATARINA){
-                spiellstandActuell = Spielstand.ausInt(spiellstandActuell.wert + 1)
+            Log.d("Die Hüter des Kahlgrund Kristalls", "Klick Weiter. Stand vor Änderung: $spiellstandActuell")
+            if(spiellstandActuell == Spielstand.INTRO ||
+               spiellstandActuell == Spielstand.START_ST_KATARINA ||
+               spiellstandActuell == Spielstand.ERGEBNIS_ST_KATARINA ||
+               spiellstandActuell == Spielstand.START_SACKHAUS ){
+                    spiellstandActuell = Spielstand.ausInt(spiellstandActuell.wert + 1)
             }
             saveProgress(spiellstandActuell.wert)
             mediaPlayer?.stop()
 
-            if(spiellstandActuell == Spielstand.INTRO || spiellstandActuell == Spielstand.START_ST_KATARINA){
+            if(spiellstandActuell == Spielstand.INTRO ||
+               spiellstandActuell == Spielstand.START_ST_KATARINA ||
+               spiellstandActuell == Spielstand.ERGEBNIS_ST_KATARINA ||
+               spiellstandActuell == Spielstand.START_SACKHAUS ){
                 setEnvironment()
             }
-            else if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
+            else if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA ||
+                     spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
                 val intent = Intent(this, QuizActivity::class.java)
                 startActivity(intent)
             }
@@ -100,22 +109,6 @@ class MainActivity : AppCompatActivity() {
         headerImage.setImageResource(bildIdle)
         updateUIForChapter()
         startAudioLogic()
-        startAutoScroll()
-    }
-
-    private fun updateUIForChapter() {
-        // Text zurücksetzen
-        scrollView.scrollTo(0, 0)
-
-        // Text basierend auf Kapitel setzen
-        storyTextView.text = when (spiellstandActuell) {
-            Spielstand.INTRO                -> getString(R.string.story_intro)
-            Spielstand.START_ST_KATARINA    -> getString(R.string.kapitel_1_frage)
-            Spielstand.ERGEBNIS_ST_KATARINA -> getString(R.string.kapitle_1_antwort)
-            else -> getString(R.string.story_intro)
-        }
-
-        // Auto-Scroll neu starten
         startAutoScroll()
     }
 
@@ -198,9 +191,29 @@ class MainActivity : AppCompatActivity() {
             Spielstand.INTRO                -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
             Spielstand.START_ST_KATARINA    ->  Triple(R.drawable.kapitel_1_bild_1, R.drawable.kapitel_1_bild_2, R.drawable.kapitel_1_bild_3)
             Spielstand.ERGEBNIS_ST_KATARINA ->  Triple(R.drawable.kapitel_1_bild_4, R.drawable.kapitel_1_bild_5, R.drawable.kapitel_1_bild_6)
+            Spielstand.START_SACKHAUS       ->  Triple(R.drawable.kapitel_2_bild_1, R.drawable.kapitel_2_bild_2, R.drawable.kapitel_2_bild_3)
+            Spielstand.ERGEBNIS_SACKHAUS    ->  Triple(R.drawable.kapitel_2_bild_4, R.drawable.kapitel_2_bild_4, R.drawable.kapitel_2_bild_4)
             // Standardfall: Falls Kapitelnummer unbekannt, nimm die Startbilder
             else -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
         }
+    }
+
+    private fun updateUIForChapter() {
+        // Text zurücksetzen
+        scrollView.scrollTo(0, 0)
+
+        // Text basierend auf Kapitel setzen
+        storyTextView.text = when (spiellstandActuell) {
+            Spielstand.INTRO                -> getString(R.string.story_intro)
+            Spielstand.START_ST_KATARINA    -> getString(R.string.kapitel_1_frage)
+            Spielstand.ERGEBNIS_ST_KATARINA -> getString(R.string.kapitle_1_antwort)
+            Spielstand.START_SACKHAUS       -> getString(R.string.kapitel_2_frage)
+            Spielstand.ERGEBNIS_SACKHAUS    -> getString(R.string.kapitel_2_antwort)
+            else -> getString(R.string.story_intro)
+        }
+
+        // Auto-Scroll neu starten
+        startAutoScroll()
     }
 
     private fun getStoryAudio(kapitel: Spielstand): Int {
@@ -208,6 +221,8 @@ class MainActivity : AppCompatActivity() {
             Spielstand.INTRO                -> R.raw.mp3_1
             Spielstand.START_ST_KATARINA    -> R.raw.mp3_kapitel_1_frage
             Spielstand.ERGEBNIS_ST_KATARINA -> R.raw.mp3_kapitel_1_ergebnis
+            Spielstand.START_SACKHAUS       -> R.raw.mp3_kapitel_2_frage
+            Spielstand.ERGEBNIS_SACKHAUS    -> R.raw.mp3_kapitel_2_ergenis
             // Weitere Kapitel hier ergänzen
             else -> R.raw.mp3_1
         }

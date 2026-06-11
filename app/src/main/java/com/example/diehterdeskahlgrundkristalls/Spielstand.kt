@@ -4,7 +4,10 @@ enum class Spielstand(val wert: Int) {
     INTRO(0),
     START_ST_KATARINA(1),
     QUIZ_ST_KATARINA(2),
-    ERGEBNIS_ST_KATARINA(3);
+    ERGEBNIS_ST_KATARINA(3),
+    START_SACKHAUS(4),
+    QUIZ_SACKHAUS(5),
+    ERGEBNIS_SACKHAUS(6);
 
     companion object {
         // Hilfsfunktion, um aus einer Zahl wieder ein Enum zu machen
