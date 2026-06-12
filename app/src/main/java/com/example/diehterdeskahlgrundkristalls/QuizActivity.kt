@@ -53,6 +53,14 @@ class QuizActivity : AppCompatActivity() {
             btn3.text = "1682"
             btn4.text = "1996"
         }
+        else if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ){
+            quizImage.setImageResource(R.drawable.raetsel_3)
+            questionText.text = "Wie viele Morgensterne sind auf dem richtigen Wappen von Schöllkrippen zu sehen?"
+            btn1.text = "1"
+            btn2.text = "2"
+            btn3.text = "3"
+            btn4.text = "4"
+        }
 
         // Klick-Logik
         btn1.setOnClickListener {
@@ -68,6 +76,9 @@ class QuizActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish()
             }
+            else if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
+                handleAnswer(false)
+            }
         }
         btn2.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
@@ -82,6 +93,9 @@ class QuizActivity : AppCompatActivity() {
             else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
                 handleAnswer(false)
             }
+            else if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
+                handleAnswer(false)
+            }
         }
         btn3.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
@@ -90,12 +104,24 @@ class QuizActivity : AppCompatActivity() {
             else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
                 handleAnswer(false)
             }
+            if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
+                handleAnswer(true)
+                saveProgress(spiellstandActuell.wert + 1)
+                val intent = android.content.Intent(this, MainActivity::class.java)
+                // Flags sorgen dafür, dass die MainActivity sauber neu startet
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
+            }
         }
         btn4.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
                 handleAnswer(false)
             }
             else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
+                handleAnswer(false)
+            }
+            else if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
                 handleAnswer(false)
             }
         }

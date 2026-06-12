@@ -58,7 +58,8 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("Die Hüter des Kahlgrund Kristalls", "aktueller Spielstand: $spiellstandActuell")
         if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA ||
-            spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
+            spiellstandActuell == Spielstand.QUIZ_SACKHAUS ||
+            spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
             val intent = Intent(this, QuizActivity::class.java)
             startActivity(intent)
         }
@@ -84,7 +85,9 @@ class MainActivity : AppCompatActivity() {
             if(spiellstandActuell == Spielstand.INTRO ||
                spiellstandActuell == Spielstand.START_ST_KATARINA ||
                spiellstandActuell == Spielstand.ERGEBNIS_ST_KATARINA ||
-               spiellstandActuell == Spielstand.START_SACKHAUS ){
+               spiellstandActuell == Spielstand.START_SACKHAUS ||
+               spiellstandActuell == Spielstand.ERGEBNIS_SACKHAUS ||
+               spiellstandActuell == Spielstand.START_MARKTPLATZ ){
                     spiellstandActuell = Spielstand.ausInt(spiellstandActuell.wert + 1)
             }
             saveProgress(spiellstandActuell.wert)
@@ -93,11 +96,14 @@ class MainActivity : AppCompatActivity() {
             if(spiellstandActuell == Spielstand.INTRO ||
                spiellstandActuell == Spielstand.START_ST_KATARINA ||
                spiellstandActuell == Spielstand.ERGEBNIS_ST_KATARINA ||
-               spiellstandActuell == Spielstand.START_SACKHAUS ){
+               spiellstandActuell == Spielstand.START_SACKHAUS ||
+               spiellstandActuell == Spielstand.ERGEBNIS_SACKHAUS ||
+               spiellstandActuell == Spielstand.START_MARKTPLATZ ){
                 setEnvironment()
             }
             else if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA ||
-                     spiellstandActuell == Spielstand.QUIZ_SACKHAUS) {
+                     spiellstandActuell == Spielstand.QUIZ_SACKHAUS ||
+                     spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
                 val intent = Intent(this, QuizActivity::class.java)
                 startActivity(intent)
             }
@@ -192,7 +198,9 @@ class MainActivity : AppCompatActivity() {
             Spielstand.START_ST_KATARINA    ->  Triple(R.drawable.kapitel_1_bild_1, R.drawable.kapitel_1_bild_2, R.drawable.kapitel_1_bild_3)
             Spielstand.ERGEBNIS_ST_KATARINA ->  Triple(R.drawable.kapitel_1_bild_4, R.drawable.kapitel_1_bild_5, R.drawable.kapitel_1_bild_6)
             Spielstand.START_SACKHAUS       ->  Triple(R.drawable.kapitel_2_bild_1, R.drawable.kapitel_2_bild_2, R.drawable.kapitel_2_bild_3)
-            Spielstand.ERGEBNIS_SACKHAUS    ->  Triple(R.drawable.kapitel_2_bild_4, R.drawable.kapitel_2_bild_4, R.drawable.kapitel_2_bild_4)
+            Spielstand.ERGEBNIS_SACKHAUS    ->  Triple(R.drawable.kapitel_2_bild_4, R.drawable.kapitel_2_bild_5, R.drawable.kapitel_2_bild_6)
+            Spielstand.START_MARKTPLATZ     ->  Triple(R.drawable.kapitel_3_bild_1, R.drawable.kapitel_3_bild_2, R.drawable.kapitel_3_bild_3)
+            Spielstand.ERGEBNIS_MARKTPLATZ  ->  Triple(R.drawable.kapitel_3_bild_4, R.drawable.kapitel_3_bild_5, R.drawable.kapitel_3_bild_6)
             // Standardfall: Falls Kapitelnummer unbekannt, nimm die Startbilder
             else -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
         }
@@ -209,6 +217,7 @@ class MainActivity : AppCompatActivity() {
             Spielstand.ERGEBNIS_ST_KATARINA -> getString(R.string.kapitle_1_antwort)
             Spielstand.START_SACKHAUS       -> getString(R.string.kapitel_2_frage)
             Spielstand.ERGEBNIS_SACKHAUS    -> getString(R.string.kapitel_2_antwort)
+            Spielstand.START_MARKTPLATZ     -> getString(R.string.kapitel_3_frage)
             else -> getString(R.string.story_intro)
         }
 
@@ -223,6 +232,7 @@ class MainActivity : AppCompatActivity() {
             Spielstand.ERGEBNIS_ST_KATARINA -> R.raw.mp3_kapitel_1_ergebnis
             Spielstand.START_SACKHAUS       -> R.raw.mp3_kapitel_2_frage
             Spielstand.ERGEBNIS_SACKHAUS    -> R.raw.mp3_kapitel_2_ergenis
+            Spielstand.START_MARKTPLATZ     -> R.raw.mp3_kapitel_3_frage
             // Weitere Kapitel hier ergänzen
             else -> R.raw.mp3_1
         }
