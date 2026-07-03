@@ -44,6 +44,7 @@ class QuizActivity : AppCompatActivity() {
             btn1.text = "Gott schütze dich"
             btn2.text = "Sankt Katharina"
             btn3.text = "Erwecke deine Kirche und fang bei mir an"
+            btn4.text = "Tritt ein in mein Haus"
         }
         else if(spiellstandActuell == Spielstand.QUIZ_SACKHAUS){
             quizImage.setImageResource(R.drawable.raetsel_2)
@@ -60,6 +61,14 @@ class QuizActivity : AppCompatActivity() {
             btn2.text = "2"
             btn3.text = "3"
             btn4.text = "4"
+        }
+        else if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE){
+            quizImage.setImageResource(R.drawable.raetsel_4)
+            questionText.text = "Was ist an der Turmspitze der Lucas Kapelle"
+            btn1.text = "Reichsapfel"
+            btn2.text = "Sonne"
+            btn3.text = "Kreuz"
+            btn4.text = "Wappen"
         }
 
         // Klick-Logik
@@ -79,6 +88,9 @@ class QuizActivity : AppCompatActivity() {
             else if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
                 handleAnswer(false)
             }
+            else if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
+                handleAnswer(false)
+            }
         }
         btn2.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
@@ -94,6 +106,9 @@ class QuizActivity : AppCompatActivity() {
                 handleAnswer(false)
             }
             else if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
+                handleAnswer(false)
+            }
+            else if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
                 handleAnswer(false)
             }
         }
@@ -113,6 +128,15 @@ class QuizActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish()
             }
+            if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
+                handleAnswer(true)
+                saveProgress(spiellstandActuell.wert + 1)
+                val intent = android.content.Intent(this, MainActivity::class.java)
+                // Flags sorgen dafür, dass die MainActivity sauber neu startet
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
+            }
         }
         btn4.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
@@ -122,6 +146,9 @@ class QuizActivity : AppCompatActivity() {
                 handleAnswer(false)
             }
             else if(spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ) {
+                handleAnswer(false)
+            }
+            else if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
                 handleAnswer(false)
             }
         }
