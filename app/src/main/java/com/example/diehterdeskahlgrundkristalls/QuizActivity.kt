@@ -18,6 +18,10 @@ class QuizActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // DIESE ZEILE HINZUFÜGEN: Verhindert das Abdunkeln des Bildschirms
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // Fixiert die Orientierung auf Hochkant
+        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         enableEdgeToEdge()
         setContentView(R.layout.activity_quiz)
 
@@ -70,6 +74,18 @@ class QuizActivity : AppCompatActivity() {
             btn3.text = "Kreuz"
             btn4.text = "Wappen"
         }
+        else if(spiellstandActuell == Spielstand.QUIZ_SCHWIMMBAD){
+            quizImage.setImageResource(R.drawable.raetsel_5)
+            questionText.text = "Was gibt es im Schöllkrippener Schwimmbad leider nicht"
+            btn1.text = "1m Sprungturm"
+            btn2.text = "3m Sprungturm"
+            btn3.text = "Wellenrutsche"
+            btn4.text = "Röhrenrutsche"
+        }
+        else{
+
+        }
+
 
         // Klick-Logik
         btn1.setOnClickListener {
@@ -91,6 +107,9 @@ class QuizActivity : AppCompatActivity() {
             else if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
                 handleAnswer(false)
             }
+            else if(spiellstandActuell == Spielstand.QUIZ_SCHWIMMBAD) {
+                handleAnswer(false)
+            }
         }
         btn2.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
@@ -109,6 +128,9 @@ class QuizActivity : AppCompatActivity() {
                 handleAnswer(false)
             }
             else if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
+                handleAnswer(false)
+            }
+            else if(spiellstandActuell == Spielstand.QUIZ_SCHWIMMBAD) {
                 handleAnswer(false)
             }
         }
@@ -137,6 +159,9 @@ class QuizActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish()
             }
+            else if(spiellstandActuell == Spielstand.QUIZ_SCHWIMMBAD) {
+                handleAnswer(false)
+            }
         }
         btn4.setOnClickListener {
             if(spiellstandActuell == Spielstand.QUIZ_ST_KATARINA) {
@@ -150,6 +175,15 @@ class QuizActivity : AppCompatActivity() {
             }
             else if(spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
                 handleAnswer(false)
+            }
+            if(spiellstandActuell == Spielstand.QUIZ_SCHWIMMBAD) {
+                handleAnswer(true)
+                saveProgress(spiellstandActuell.wert + 1)
+                val intent = android.content.Intent(this, MainActivity::class.java)
+                // Flags sorgen dafür, dass die MainActivity sauber neu startet
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
             }
         }
     }

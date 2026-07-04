@@ -36,6 +36,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // DIESE ZEILE HINZUFÜGEN: Verhindert das Abdunkeln des Bildschirms
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // Fixiert die Orientierung auf Hochkant
+        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContentView(R.layout.activity_main)
 
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
@@ -60,7 +64,8 @@ class MainActivity : AppCompatActivity() {
         if (spiellstandActuell == Spielstand.QUIZ_ST_KATARINA ||
             spiellstandActuell == Spielstand.QUIZ_SACKHAUS ||
             spiellstandActuell == Spielstand.QUIZ_MARKTPLATZ ||
-            spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE) {
+            spiellstandActuell == Spielstand.QUIZ_LUCASKAPELLE ||
+            spiellstandActuell == Spielstand.QUIZ_SCHWIMMBAD) {
             val intent = Intent(this, QuizActivity::class.java)
             startActivity(intent)
         }
@@ -96,6 +101,9 @@ class MainActivity : AppCompatActivity() {
                spiellstandActuell == Spielstand.ERGEBNIS_SCHWIMMBAD ){
                     spiellstandActuell = Spielstand.ausInt(spiellstandActuell.wert + 1)
             }
+            else{
+                spiellstandActuell = Spielstand.ausInt(0)
+            }
             saveProgress(spiellstandActuell.wert)
             mediaPlayer?.stop()
 
@@ -106,6 +114,7 @@ class MainActivity : AppCompatActivity() {
                spiellstandActuell == Spielstand.ERGEBNIS_SACKHAUS ||
                spiellstandActuell == Spielstand.START_MARKTPLATZ ||
                spiellstandActuell == Spielstand.ERGEBNIS_MARKTPLATZ ||
+               spiellstandActuell == Spielstand.START_LUCASKAPELLE ||
                spiellstandActuell == Spielstand.ERGEBNIS_LUCASKAPELLE ||
                spiellstandActuell == Spielstand.START_SCHWIMMBAD ||
                spiellstandActuell == Spielstand.ERGEBNIS_SCHWIMMBAD ){
@@ -181,6 +190,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Spielstand neu laden, falls er im Impressum zurückgesetzt wurde
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val neuerStand = Spielstand.ausInt(prefs.getInt(KEY_KAPITEL, 0))
+        
+        if (neuerStand != spiellstandActuell) {
+            spiellstandActuell = neuerStand
+            setEnvironment()
+        }
+
         // Wenn die Musik beim Zurückkehren wieder starten soll:
         if (canStartMusic && mediaPlayer != null && !mediaPlayer!!.isPlaying) {
             mediaPlayer?.start()
@@ -216,8 +234,7 @@ class MainActivity : AppCompatActivity() {
             Spielstand.START_LUCASKAPELLE   ->  Triple(R.drawable.kapitel_4_bild_1, R.drawable.kapitel_4_bild_2, R.drawable.kapitel_4_bild_2)
             Spielstand.ERGEBNIS_LUCASKAPELLE->  Triple(R.drawable.kapitel_4_bild_4, R.drawable.kapitel_4_bild_5, R.drawable.kapitel_4_bild_6)
             Spielstand.START_SCHWIMMBAD     ->  Triple(R.drawable.kapitel_5_bild_1, R.drawable.kapitel_5_bild_2, R.drawable.kapitel_5_bild_3)
-            Spielstand.ERGEBNIS_SCHWIMMBAD  ->  Triple(R.drawable.kapitel_5_bild_4, R.drawable.kapitel_5_bild_5, R.drawable.kapitel_5_bild_6)
-            // Standardfall: Falls Kapitelnummer unbekannt, nimm die Startbilder
+            Spielstand.ERGEBNIS_SCHWIMMBAD  ->  Triple(R.drawable.kapitel_5_bild_4, R.drawable.kapitel_5_bild_5, R.drawable.kapitel_5_bild_4)
             else -> Triple(R.drawable.start_bild_1, R.drawable.start_bild_2, R.drawable.start_bild_3)
         }
     }
@@ -259,7 +276,6 @@ class MainActivity : AppCompatActivity() {
             Spielstand.ERGEBNIS_LUCASKAPELLE-> R.raw.mp3_kapitel_4_ergebnis
             Spielstand.START_SCHWIMMBAD     -> R.raw.mp3_kapitel_5_frage
             Spielstand.ERGEBNIS_SCHWIMMBAD  -> R.raw.mp3_kapitel_5_ergebnis
-            // Weitere Kapitel hier ergänzen
             else -> R.raw.mp3_1
         }
     }
